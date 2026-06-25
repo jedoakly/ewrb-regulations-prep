@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ETCO Practice Exam</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --surface: #181c26; --surface2: #1e2333; --border: #2a3050;
+    --accent: #00c896; --accent-dim: #00c89620; --accent-hover: #00e5a8;
+    --wrong: #ff4d6d; --wrong-dim: #ff4d6d18; --text: #e8eaf0;
+    --text-muted: #7a8499; --text-dim: #4a5268; --yellow: #ffd166; --blue: #4da6ff;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+  header { width: 100%; background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .user-pill { font-size: 12px; color: var(--text-muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; display: none; }
+  .user-pill span { color: var(--accent); font-weight: 600; }
+  .progress-bar-wrap { flex: 1; max-width: 260px; margin: 0 16px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; display: none; }
+  .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+  .progress-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .screen { display: none; width: 100%; max-width: 760px; padding: 36px 20px; }
+  .screen.active { display: block; }
+  /* AUTH */
+  .auth-wrap { max-width: 400px; margin: 56px auto 0; }
+  .auth-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+  .auth-sub { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; line-height: 1.6; }
+  .auth-tabs { display: flex; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .auth-tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text-muted); border: none; transition: all 0.2s; }
+  .auth-tab.active { background: var(--accent); color: #0f1117; }
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+  input[type=text], input[type=password] { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  input:focus { border-color: var(--accent); }
+  .auth-error { color: var(--wrong); font-size: 13px; margin-bottom: 12px; display: none; padding: 10px 14px; background: var(--wrong-dim); border: 1px solid var(--wrong); border-radius: 8px; }
+  .mini-spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 24px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: var(--accent); color: #0f1117; width: 100%; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--text-muted); color: var(--text); }
+  .btn-sm { padding: 8px 16px; font-size: 13px; }
+  /* DASHBOARD */
+  .dash-header { margin-bottom: 28px; }
+  .dash-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .dash-header h2 span { color: var(--accent); }
+  .dash-sub { color: var(--text-muted); font-size: 13px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 12px; text-align: center; }
+  .stat-num { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 600; color: var(--accent); display: block; margin-bottom: 4px; }
+  .stat-num.w { color: var(--wrong); } .stat-num.y { color: var(--yellow); } .stat-num.b { color: var(--blue); }
+  .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .standards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 22px; }
+  .std-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .std-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .std-name { font-weight: 600; font-size: 13px; }
+  .std-pct { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; }
+  .std-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .std-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .std-detail { font-size: 11px; color: var(--text-muted); }
+  .dash-actions { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .dash-actions .btn { flex: 1; min-width: 130px; }
+  .section-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .history-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .history-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); min-width: 90px; }
+  .history-mode { font-size: 11px; color: var(--text-muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
+  .history-score { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; margin-left: auto; }
+  .history-std-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+  .std-pill { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+  .std-pill.ESR { color: var(--blue); border: 1px solid var(--blue); background: #4da6ff15; }
+  .std-pill.AS3000 { color: var(--yellow); border: 1px solid var(--yellow); background: #ffd16615; }
+  .std-pill.AS3008 { color: #c084fc; border: 1px solid #c084fc; background: #c084fc15; }
+  .std-pill.ECP { color: #fb923c; border: 1px solid #fb923c; background: #fb923c15; }
+  .empty-state { text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+  /* START / MODE */
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .mode-card { background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 18px; cursor: pointer; transition: all 0.15s; text-align: left; }
+  .mode-card:hover, .mode-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+  .mode-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+  .mode-title { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+  .mode-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  /* QUIZ */
+  .q-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .q-counter { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+  .q-tags { display: flex; gap: 6px; }
+  .q-tag { font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 3px 7px; border-radius: 4px; background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); text-transform: uppercase; }
+  .q-tag.ESR { color: var(--blue); border-color: var(--blue); background: #4da6ff15; }
+  .q-tag.AS3000 { color: var(--yellow); border-color: var(--yellow); background: #ffd16615; }
+  .q-tag.AS3008 { color: #c084fc; border-color: #c084fc; background: #c084fc15; }
+  .q-tag.ECP { color: #fb923c; border-color: #fb923c; background: #fb923c15; }
+  .question-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+  .q-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .q-text { font-size: 15px; font-weight: 500; line-height: 1.65; white-space: pre-wrap; }
+  .options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .option { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 15px; cursor: pointer; display: flex; align-items: flex-start; gap: 11px; transition: all 0.15s; font-size: 14px; line-height: 1.5; text-align: left; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: var(--accent-dim); }
+  .option.selected-correct { border-color: var(--accent); background: var(--accent-dim); }
+  .option.selected-wrong { border-color: var(--wrong); background: var(--wrong-dim); }
+  .option.show-correct { border-color: var(--accent); background: var(--accent-dim); }
+  .option.disabled { cursor: default; }
+  .option-letter { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; min-width: 20px; height: 20px; border-radius: 4px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .option.selected-correct .option-letter { background: var(--accent); color: #0f1117; border-color: var(--accent); }
+  .option.selected-wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+  .option.show-correct .option-letter { background: var(--accent); color: #0f1117; border-color: var(--accent); }
+  .feedback { display: none; border-radius: 10px; padding: 13px 16px; margin-bottom: 14px; font-size: 13px; line-height: 1.6; }
+  .feedback.correct { display: block; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); }
+  .feedback.wrong { display: block; background: var(--wrong-dim); border: 1px solid var(--wrong); color: #ff8099; }
+  .feedback-title { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+  .feedback-ref { margin-top: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.7; }
+  .free-answer-area { margin-bottom: 12px; }
+  .free-answer-area textarea { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; resize: vertical; min-height: 80px; outline: none; transition: border-color 0.2s; }
+  .free-answer-area textarea:focus { border-color: var(--accent); }
+  .answer-reveal { display: none; background: var(--surface2); border: 1px solid var(--accent); border-radius: 10px; padding: 13px 16px; font-size: 14px; line-height: 1.65; color: var(--accent); margin-bottom: 14px; white-space: pre-wrap; }
+  .answer-reveal.show { display: block; }
+  .answer-reveal strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; opacity: 0.65; font-family: 'JetBrains Mono', monospace; }
+  .quiz-nav { display: flex; gap: 10px; }
+  .quiz-nav .btn { flex: 1; }
+  /* RESULTS */
+  .results-hero { text-align: center; padding: 36px 0 28px; }
+  .score-ring { width: 128px; height: 128px; margin: 0 auto 18px; position: relative; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .score-pct { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: var(--accent); display: block; line-height: 1; }
+  .score-sub { font-size: 11px; color: var(--text-muted); }
+  .results-grade { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .results-msg { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+  .results-breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .breakdown-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+  .breakdown-num { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 600; display: block; margin-bottom: 4px; }
+  .breakdown-num.c { color: var(--accent); } .breakdown-num.w { color: var(--wrong); } .breakdown-num.s { color: var(--yellow); }
+  .breakdown-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .results-std-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+  .results-std-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .results-std-name { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
+  .results-std-score { font-size: 22px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .results-std-detail { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .results-actions { display: flex; gap: 10px; margin-bottom: 22px; }
+  .review-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
+  .review-q { color: var(--text); margin-bottom: 3px; }
+  .review-ans { font-size: 12px; color: var(--text-muted); }
+  .review-ans span { color: var(--accent); }
+  .saving-indicator { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 12px; }
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .standards-grid, .mode-grid, .results-std-grid { grid-template-columns: 1fr; }
+    .dash-actions { flex-direction: column; }
+    header { padding: 12px 14px; }
+    .screen { padding: 20px 14px; }
+    .question-card { padding: 18px; }
+    .history-item { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">ETCO // Exam Prep</div>
+  <div class="progress-bar-wrap" id="headerProgress">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="header-right">
+    <div class="progress-label" id="progressLabel"></div>
+    <div class="user-pill" id="userPill">Logged in as <span id="userPillName"></span></div>
+    <button class="btn btn-outline btn-sm" id="logoutBtn" style="display:none" onclick="logout()">Log out</button>
+  </div>
+</header>
+
+<!-- AUTH -->
+<div class="screen active" id="authScreen">
+  <div class="auth-wrap">
+    <div class="auth-title">⚡ ETCO Exam Prep</div>
+    <div class="auth-sub">Log in or create an account to save your scores and track progress across all sessions.</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Log In</button>
+      <button class="auth-tab" onclick="switchTab('register')">Register</button>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="authUsername" placeholder="e.g. jed123" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="Min 4 characters" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" id="authBtn" onclick="handleAuth()" style="margin-top:4px">Log In</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="screen" id="dashScreen">
+  <div class="dash-header">
+    <h2>Hey, <span id="dashName"></span> 👋</h2>
+    <div class="dash-sub">Tracking for July 14th · ETCO Theory Exam</div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><span class="stat-num" id="dsTotalSessions">0</span><span class="stat-label">Sessions</span></div>
+    <div class="stat-card"><span class="stat-num b" id="dsBestScore">—</span><span class="stat-label">Best</span></div>
+    <div class="stat-card"><span class="stat-num y" id="dsAvgScore">—</span><span class="stat-label">Average</span></div>
+    <div class="stat-card"><span class="stat-num w" id="dsWeakCount">0</span><span class="stat-label">Weak Qs</span></div>
+  </div>
+  <div class="standards-grid" id="standardsGrid"></div>
+  <div class="dash-actions">
+    <button class="btn btn-primary" onclick="showScreen('startScreen')">Start New Exam →</button>
+    <button class="btn btn-outline" onclick="startWeakMode()">🎯 Drill Weak Spots</button>
+  </div>
+  <div class="section-title">Session History</div>
+  <div id="historyList"></div>
+</div>
+
+<!-- START -->
+<div class="screen" id="startScreen">
+  <div style="margin-bottom:20px"><button class="btn btn-outline btn-sm" onclick="showScreen('dashScreen');loadDashboard()">← Dashboard</button></div>
+  <h2 style="font-size:19px;font-weight:700;margin-bottom:5px">Choose Mode</h2>
+  <div style="color:var(--text-muted);font-size:13px;margin-bottom:20px">72 questions · ESR 2010 · AS/NZS 3000 · AS/NZS 3008 · ECP34</div>
+  <div class="mode-grid">
+    <div class="mode-card selected" data-mode="full" onclick="selectMode(this,'full')"><span class="mode-icon">📋</span><div class="mode-title">Full Exam</div><div class="mode-desc">All 72 questions in order.</div></div>
+    <div class="mode-card" data-mode="shuffle" onclick="selectMode(this,'shuffle')"><span class="mode-icon">🔀</span><div class="mode-title">Shuffle</div><div class="mode-desc">All questions in random order.</div></div>
+    <div class="mode-card" data-mode="weak" onclick="selectMode(this,'weak')"><span class="mode-icon">🎯</span><div class="mode-title">Weak Spots</div><div class="mode-desc">Only questions you've gotten wrong.</div></div>
+    <div class="mode-card" data-mode="quick" onclick="selectMode(this,'quick')"><span class="mode-icon">⚡</span><div class="mode-title">Quick Fire</div><div class="mode-desc">20 random questions.</div></div>
+  </div>
+  <button class="btn btn-primary" onclick="startQuiz()">Start →</button>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="quizScreen">
+  <div class="q-meta">
+    <div class="q-counter" id="qCounter">Q 1 / 72</div>
+    <div class="q-tags" id="qTags"></div>
+  </div>
+  <div class="question-card">
+    <div class="q-num" id="qNum">Question 01</div>
+    <div class="q-text" id="qText"></div>
+  </div>
+  <div class="options" id="optionsContainer"></div>
+  <div class="free-answer-area" id="freeAnswerArea" style="display:none">
+    <textarea id="freeAnswerInput" placeholder="Type your answer or working here…"></textarea>
+  </div>
+  <button class="btn btn-outline" id="revealBtn" style="display:none;margin-bottom:12px;width:100%" onclick="revealFreeAnswer()">👁 Show Answer</button>
+  <div class="answer-reveal" id="answerReveal"><strong>Answer</strong><span id="answerRevealText"></span></div>
+  <div class="feedback" id="feedbackBox">
+    <div class="feedback-title" id="feedbackTitle"></div>
+    <div id="feedbackBody"></div>
+    <div class="feedback-ref" id="feedbackRef"></div>
+  </div>
+  <div class="quiz-nav">
+    <button class="btn btn-outline" onclick="prevQ()" id="prevBtn" style="display:none">← Back</button>
+    <button class="btn btn-primary" onclick="nextQ()" id="nextBtn" disabled>Next →</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="resultsScreen">
+  <div class="results-hero">
+    <div class="score-ring">
+      <svg width="128" height="128" viewBox="0 0 128 128">
+        <circle cx="64" cy="64" r="52" fill="none" stroke="#2a3050" stroke-width="9"/>
+        <circle cx="64" cy="64" r="52" fill="none" stroke="#00c896" stroke-width="9"
+          stroke-dasharray="326.7" id="scoreCircle" stroke-dashoffset="326.7" stroke-linecap="round"/>
+      </svg>
+      <div class="score-ring-label">
+        <span class="score-pct" id="scorePct">0%</span>
+        <span class="score-sub">score</span>
+      </div>
+    </div>
+    <div class="results-grade" id="resultsGrade">—</div>
+    <div class="results-msg" id="resultsMsg">—</div>
+  </div>
+  <div class="results-breakdown">
+    <div class="breakdown-card"><span class="breakdown-num c" id="correctCount">0</span><span class="breakdown-label">Correct</span></div>
+    <div class="breakdown-card"><span class="breakdown-num w" id="wrongCount">0</span><span class="breakdown-label">Wrong</span></div>
+    <div class="breakdown-card"><span class="breakdown-num s" id="skippedCount">0</span><span class="breakdown-label">Skipped</span></div>
+  </div>
+  <div class="results-std-grid" id="resultsStdGrid"></div>
+  <div class="saving-indicator" id="savingIndicator"></div>
+  <div class="results-actions" style="margin-top:16px">
+    <button class="btn btn-outline" onclick="showScreen('dashScreen');loadDashboard()" style="flex:1">← Dashboard</button>
+    <button class="btn btn-primary" onclick="startWeakMode()" id="reviewBtn" style="flex:1">🎯 Drill Wrong</button>
+  </div>
+  <div id="reviewList" style="margin-top:20px"></div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  {id:1,text:"The Electricity Act of 1992 are administered by",type:"mc",options:["EWRB","Work safe","MBIE Ministry of Business, Innovation and Employment","Standards New Zealand"],answer:2,ref:"Front page",tags:["ESR"]},
+  {id:2,text:"Every accident caused wholly or partly by, or involving or affecting electricity and results in serious harm to any person, or damage to any place, WorkSafe shall be notified by the APPROPRIATE PERSON. With reference to the Electricity Act 1992, who is the appropriate person?",type:"mc",options:["If the accident is discovered by any person who is authorised to do prescribed electrical work under part 10, that person.","The person investigating the accident pursuant to the Health and Safety at Works Act 2015.","The responding emergency service.","The Secretary"],answer:0,ref:"Section 16 (4)(b)",tags:["ESR"]},
+  {id:3,text:"With reference to the Electricity Act 1992, what is the maximum length a practising licence can be issued for?",type:"mc",options:["2 Years","1 Year","6 months","5 Years"],answer:3,ref:"Section 104",tags:["ESR"]},
+  {id:4,text:"With reference to the Electricity Act 1992 complete the following sentence.\nAccidents that result in ________ or ________ that renders that place unusable for any purpose shall be notified to WorkSafe.",type:"free",answer:"serious harm to any person / damage to any place or part of a place",ref:"Section 16",tags:["ESR"]},
+  {id:5,text:"With reference to the Electricity Act 1992 complete the following sentence.\n'Supervision', in relation to any work, means that the work is undertaken under such control and direction of a ________ to do the work.",type:"free",answer:"person authorised under this Act",ref:"Section 2",tags:["ESR"]},
+  {id:6,text:"With reference to the Electricity Act 1992 complete the following sentence.\nThis section does not prevent the connection to any power supply if that connection or supply is solely for the purposes of carrying out ________, ________ or ________ required by any regulations.",type:"free",answer:"Testing / certification / inspection",ref:"Section highlighted",tags:["ESR"]},
+  {id:7,text:"Use the SIMPLIFIED volt drop method in AS/NZS 3000 to calculate the maximum length (to 1 decimal place) a submain cable can run to a shed.\nCable: 6mm² 2C+E TPS, Maximum demand: 23A, Allowed voltage drop: 2.0% (2 MARKS)",type:"free",answer:"(306 × 2) / 23 = 26.6m",ref:"Table C7",tags:["AS3008"]},
+  {id:8,text:"Use the SIMPLIFIED volt drop method in AS/NZS 3000 to calculate which cable will be suitable for a 3ph main.\nLoad: 80kW balanced, Distance: 35m, Max voltage drop: 2.5% (3 MARKS)",type:"free",answer:"80000/(1.732×400) = 115.47A\n%VD per AM = (115.47×35)/2.5 = 1617\nAnswer: 16mm²",ref:"Table C7",tags:["AS3008"]},
+  {id:9,text:"According to the Electricity (Safety) Regulations 2010, is a neutral conductor considered to be a live conductor?",type:"mc",options:["No","Yes","If bonded","MEN"],answer:1,ref:"Regulation 2",tags:["ESR"]},
+  {id:10,text:"According to the Electricity (Safety) Regulations 2010, define high voltage.",type:"mc",options:["Over 1000V ac or 1500V dc","Over 1000V ac to 11kV ac","Greater than 55V ac and 120V dc","Greater than 11kV"],answer:0,ref:"Regulation 2",tags:["ESR"]},
+  {id:11,text:"With reference to the Electricity (Safety) Regulations 2010 correctly complete the following:\nElectrical Installations must be designed, constructed and operated so that the voltage drop is not more than ________ between the point of supply and any socket outlet within an electrical installation operating at standard low voltage.",type:"free",answer:"5% under maximum load conditions",ref:"ER 63 (4)(5)",tags:["ESR"]},
+  {id:12,text:"Refer to the Electricity (Safety) Regulations 2010 and state the minimum and maximum voltage for a domestic property feed at standard low voltage at the point of supply.",type:"free",answer:"Minimum: 216.2V\nMaximum: 243.8V",ref:"ESR",tags:["ESR"]},
+  {id:13,text:"Refer to AS/NZS 3000, which standard provides guidance on the effects of electrical interference to circuits?",type:"mc",options:["AS/NZS 3760","AS/NZS 3080","AS/NZS 3098","AS/NZS 3800"],answer:1,ref:"C.5.11.5 Note 2",tags:["AS3000"]},
+  {id:14,text:"According to AS/NZS 3000 what does the term SELV mean?",type:"mc",options:["Separated Extra Low Voltage","Special Extra Low Voltage","Single Extra Low Voltage","Specified Extra Low Voltage"],answer:0,ref:"1.4.83",tags:["AS3000"]},
+  {id:15,text:"AS/NZS 3000 details DISCONNECTION TIMES for a 230/400V supply system.\nSelect the maximum disconnection time for a final subcircuit that supplies hand-held class 1 equipment.",type:"mc",options:["300 ms","0.4s","5s","40ms"],answer:1,ref:"Table 2.6",tags:["AS3000"]},
+  {id:16,text:"With reference to AS/NZS 3000 what is the minimum size for an aluminium aerial wiring conductor?",type:"mc",options:["6mm²","10mm²","16mm²","25mm²"],answer:2,ref:"AS3000",tags:["AS3000"]},
+  {id:17,text:"Refer to AS/NZS 3000 — where is it permissible to use half the current rating of the protective device as a value for your voltage drop calculation?",type:"mc",options:["At the start of sub-circuits with the load distributed over the whole length of the circuit.","No sub-circuits with the load distributed over the whole length of the circuit.","All sub-circuits with the load distributed over the whole length of the circuit.","Final sub-circuits with the load distributed over the whole length of the circuit."],answer:3,ref:"3.6.2 Exception 1",tags:["AS3000"]},
+  {id:18,text:"At what length (to 2 decimal places) would a flexible cord be deemed installation wiring?",type:"free",answer:"2.5m",ref:"3.9.7.4 Exception 2",tags:["AS3000"]},
+  {id:19,text:"With reference to AS/NZS 3000, what device shall NOT be used for automatic disconnection of supply?",type:"mc",options:["Enclosed fuse link","Moulded case circuit breakers","Semi-enclosed rewireable fuses","Miniature overcurrent circuit breakers"],answer:2,ref:"2.5.3, 2.4.2",tags:["AS3000"]},
+  {id:20,text:"Refer to AS/NZS 3000 and state the maximum number of sub-circuits permitted to be protected by an RCD in a residential installation?",type:"mc",options:["1","2","3","4"],answer:2,ref:"2.6.2.4 (b)",tags:["AS3000"]},
+  {id:21,text:"According to AS/NZS 3000 what is the minimum distance of unimpeded space around switchboards?",type:"mc",options:["0.75m with doors in any position","0.6m with doors in any position","0.6m with doors closed","0.75m with doors open"],answer:1,ref:"2.10.10.5 (b)(v)",tags:["AS3000"]},
+  {id:22,text:"A 400V capacitor has been disconnected from the supply for 60 seconds. What is the maximum permissible voltage at the capacitor terminals?",type:"mc",options:["50V","100V","200V","40V"],answer:0,ref:"4.15.3.1",tags:["AS3000"]},
+  {id:23,text:"According to AS/NZS 3000 should a 1µF capacitor be provided with a discharge path?",type:"mc",options:["Yes","No","Not specified"],answer:0,ref:"4.15.3.1",tags:["AS3000"]},
+  {id:24,text:"According to AS/NZS 3000 does an attended electric motor which has a rating of 1500W require an overtemperature protective device?",type:"mc",options:["Yes, all motors require overtemperature protective device","No, must be greater than 2250W","Only requires a HRC fuse protection","No only if it is a three phase motor."],answer:1,ref:"4.13.3.1",tags:["AS3000"]},
+  {id:25,text:"A single-phase, low voltage electric under-bench oven with separate hob is fixed into a kitchen unit. Refer to AS/NZS 3000:\n(a) Can you directly connect the wall oven to the electrical supply without a suitable plug and socket?\n(b) Are you required to install a functional switch within two meters for the oven?",type:"free",answer:"(a) YES – can connect directly without plug and socket\n(b) NO – not required within 2 metres",ref:"AS3000",tags:["AS3000"]},
+  {id:26,text:"According to AS/NZS 3000 what is the maximum voltage drop allowed on extra low voltage circuits?",type:"mc",options:["5% of nominal value when live conductors are carrying the circuit operating current.","6% of nominal value when live conductors are carrying the circuit operating current.","10% of nominal value when live conductors are carrying the circuit operating current.","15% of nominal value when live conductors are carrying the circuit operating current."],answer:2,ref:"AS3000",tags:["AS3000"]},
+  {id:27,text:"X-ray equipment must comply with AS/NZS 3000 Section 7 HIGH VOLTAGE electrical installations. True or False?",type:"mc",options:["True","False"],answer:1,ref:"7.5.1 (b)",tags:["AS3000"]},
+  {id:28,text:"Refer to AS/NZS 3000, Section 7 and select which of the following is deemed to be EVACUATION EQUIPMENT:",type:"mc",options:["Sound systems and intercom systems for emergency purposes.","Pumps for automatic sprinkler systems, water spray or deluge systems and similar fire extinguishing systems.","Air-handling systems intended to exhaust and control the spread of fire.","Lifts."],answer:0,ref:"7.2.1.3 (a)",tags:["AS3000"]},
+  {id:29,text:"ASNZS 3000:2007 Appendix C — Calculate the maximum demand in amps of a single 230V domestic installation with the following loads:\n30×50W recessed luminaires, 25×8W LED lights, 4×75W fluorescent lights, 10×150W outdoor flood lighting, 16×10A double socket outlets, 10×10A single socket outlets, 1×4kW gas/electric range, 1×3kW water storage heater, 1×6kW sauna.",type:"free",answer:"Group A(i) lighting: 30 → 20+20+19 then LED 3+2+2=7A total 7A\nGroup A(ii) outdoor: (1500÷230)×0.75 = 4.89A\nGroup B sockets: 16+16+10=42 → 10+5+5=20A\nGroup C range: (4000÷230)×0.5 = 8.7A\nGroup D sauna: (6000÷230)×0.75 = 19.57A\nGroup F water heater: 3000÷230 = 13.04A\nTotal Maximum Demand = 73.2A",ref:"Appendix C",tags:["AS3000"]},
+  {id:30,text:"State the minimum vertical distance from the ground for the last span of a 230V neutral screen service main connected to a building in an area not used by vehicular traffic.",type:"mc",options:["4.0m","2.7m","5.5m","3.0m"],answer:1,ref:"ECP34",tags:["ECP"]},
+  {id:31,text:"State the minimum safe distance that insulated conductors can be above the water level of any swimming pool.",type:"mc",options:["3.0m","Not allowed.","2.7m","5.0m"],answer:3,ref:"ECP34.3.2",tags:["ECP"]},
+  {id:32,text:"State the information that must be on the notices when overhead cables are installed over a boat ramp.",type:"free",answer:"• Warning of the conductors\n• The conductors' height and voltage\n• Information must be on both sides of the ramp",ref:"ECP34.4.4.2",tags:["ECP"]},
+  {id:33,text:"State the minimum vertical distance that must be maintained between the road and the distribution line conductors when a three phase 400V distribution line crosses a road used by private vehicles.",type:"free",answer:"5.5m",ref:"ECP34 Table 4",tags:["ECP"]},
+  {id:34,text:"State the closest distance that either a crane or hydraulic work platform can be manoeuvred near a live 11kV overhead line without written consent.",type:"free",answer:"4.0m",ref:"ECP34 5.2.1",tags:["ECP"]},
+  {id:35,text:"Prior written consent from pole ________ required for excavation or interference with any land at a greater depth than ________ within 2.2m of the pole or stay wire of an overhead electric line.",type:"free",answer:"owner / 300mm",ref:"ECP34 2.2.1 (a)",tags:["ECP"]},
+  {id:36,text:"Select the minimum DEGREE of PROTECTION required for a LUMINAIRE installed in zone 2 of a swimming pool:",type:"mc",options:["IPX8","IPX4","IPX5","IPX6"],answer:1,ref:"6.5.10 Note 5",tags:["AS3000"]},
+  {id:37,text:"Select TWO protective measures to limit a VERY LOW VOLTAGE hazard to persons IMMERSED in pool water:",type:"mc",options:["Switches and other accessories shall not be installed in Zone 0","Location of electrical equipment at a distance from the pool with all plumbing connections being made of non-conductive materials","Wiring systems shall be installed so as to prevent entry of moisture to any connection","Each luminaire supplied at nominal voltage not exceeding 12V a.c. or 30V ripple free d.c.","Metal grids or barriers inserted in any plumbing connections between the electrical equipment and pool and connected to the equipotential bonding system.","Protection by means of placing out of reach"],answer:[1,4],ref:"6.3.3.3",tags:["AS3000"]},
+  {id:38,text:"REFRIGERATION ROOMS: lamp holders suspended on a flexible pendant must be a specified height above a floor or ground. Select the correct suspended height from AS/NZS 3000 section 6.",type:"mc",options:["2.25 m","3 m","2 m","2.50 m"],answer:3,ref:"6.6.4.4.2 (b)",tags:["AS3000"]},
+  {id:39,text:"According to AS/NZS 3000 an installation with 35mm² copper mains requires a main earthing conductor of what size?",type:"mc",options:["6mm²","10mm²","16mm²","35mm²"],answer:1,ref:"Table 5.1",tags:["AS3000"]},
+  {id:40,text:"A vertical type of earth electrode must be driven to what minimum depth?",type:"mc",options:["0.8m (NZ)","1.0m (NZ)","1.8m (NZ)","2.8m (NZ)"],answer:2,ref:"AS3000",tags:["AS3000"]},
+  {id:41,text:"Refer to AS/NZS 3000 and correctly complete the following sentence:\nEquipotential bonding is intended to ________ of voltage differences between exposed conductive parts of electrical equipment and extraneous conductive parts.",type:"free",answer:"Minimise the risk associated with the occurrence",ref:"5.4",tags:["AS3000"]},
+  {id:42,text:"What is the minimum value of insulation resistance allowed on sheathed heating elements?",type:"mc",options:["0.01MΩ (10,000Ω)","0.5MΩ","1MΩ","100MΩ"],answer:0,ref:"3.3.6.2 (m) 1.0",tags:["AS3000"]},
+  {id:43,text:"Correctly complete the following:\nPolarity testing is necessary to ensure that ________ arises from the incorrect connection of active, neutral, and earthing conductors.",type:"free",answer:"Shock Hazard",ref:"8.3.7.1",tags:["AS3000"]},
+  {id:44,text:"Refer to AS/NZS 3000 section 8 and select which standard sets out common test methods required to TEST that a low voltage electrical installation complies with this standard.",type:"mc",options:["AS/NZS 3019","AS/NZS 3017","AS/NZS 3820","AS/NZS 3018"],answer:1,ref:"8.3.1",tags:["AS3000"]},
+  {id:45,text:"Refer to AS/NZS 3000 section 8 and complete the following statement regarding the results of tests for correct circuit connections:\n________ that the active, neutral and protective earthing conductors of each circuit are correctly connected so that there is no ________ circuit, between conductors, and ________ of conductors that could result in the earthing system and any exposed ________ parts becoming energized and interconnections between different ________ circuits.",type:"free",answer:"Proof that / short / transposition / conductive / circuits",ref:"8.3.8.2",tags:["AS3000"]},
+  {id:46,text:"Refer to AS/NZS 3000 and select the maximum earth fault loop impedance for a circuit protected by a Type B 25A circuit-breaker.",type:"mc",options:["2.88","2.30","1.23","1.64"],answer:1,ref:"Table 8.1",tags:["AS3000"]},
+  {id:47,text:"According to the Electricity (Safety) Regulations 2010, a warrant of electrical fitness for a mobile medical facility must be issued in accordance with which Standard?",type:"free",answer:"NZS 6115",ref:"Regulation 78 (2)(b)",tags:["ESR"]},
+  {id:48,text:"According to the Electricity (Safety) Regulations 2010 how long is a warrant of electrical fitness for a pleasure vessel valid for?",type:"mc",options:["1 Year","2 Years","6 Months","4 Years"],answer:3,ref:"Regulation 78 (3)(b)",tags:["ESR"]},
+  {id:49,text:"Refer to the Electricity (Safety) Regulations 2010 to define 'insulated'.\nIn relation to conductors and other fittings, means that the conductors or fittings are ________ with insulation in such a manner that a person may safely handle them when they are ________.",type:"free",answer:"covered / live",ref:"Regulation 4",tags:["ESR"]},
+  {id:50,text:"Electricity (Safety) Regulations 2010 states a person who has done prescribed electrical work on a low or extra-low voltage appliance, must test and confirm it is electrically safe. This is done in accordance with which document?",type:"mc",options:["AS/NZS 3551","AS/NZS 5762","AS/NZS 3019","ECP 50"],answer:1,ref:"Regulation 90 (2)(iii)",tags:["ESR"]},
+  {id:51,text:"If screw-in fuses carriers are to be used, which contact does AS/NZS 3000 state should be on the supply side of the fuse base?",type:"mc",options:["The centre contact","The back contact","The front contact","All the above"],answer:0,ref:"AS3000",tags:["AS3000"]},
+  {id:52,text:"According to AS/NZS 3000 what type of RCD is used to protect against the initiation of fire?",type:"mc",options:["Type A","Type F","Type S","Type AC"],answer:2,ref:"AS3000",tags:["AS3000"]},
+  {id:53,text:"According to AS/NZS 3000 a home medical electrical equipment installation shall be protected by a ________ RCD.",type:"free",answer:"Type I 10mA",ref:"AS3000",tags:["AS3000"]},
+  {id:54,text:"According to AS/NZS 3000, wiring systems entering a switchboard should pass through openings that provide a close fit. What dimensions constitute a close fit?",type:"free",answer:"5mm",ref:"2.9.7 Note 3",tags:["AS3000"]},
+  {id:55,text:"AS/NZS 3000 has requirements for the isolation of conductors in AC systems. Select the answer that does NOT allow a conductor to be switched:",type:"mc",options:["Active conductors.","No switch or circuit breaker shall be inserted in the neutral conductor of consumer mains.","Where an item of switchgear is required to disconnect all live conductors of a circuit, the neutral conductor cannot be disconnected without the active conductors also being disconnected.","A switch in the control circuit of a fire pump shall operate in the neutral conductor in accordance with clause 7.2.9.4."],answer:1,ref:"2.3.2.1 (b)(i)",tags:["AS3000"]},
+  {id:56,text:"Refer to AS/NZS 3000:2007 and state requirements for the use of other materials (not copper or aluminium) as earthing conductors. (Select TWO correct answers)",type:"mc",options:["The resistance shall not be greater than that of an aluminium conductor.","The resistance shall not be greater than that of a copper conductor.","Corrosion resistance shall not be inferior to other materials suitable for the purpose","Shall not be installed in damp situations."],answer:[1,2],ref:"5.3.9.1.2",tags:["AS3000"]},
+  {id:57,text:"Refer to AS/NZS 3000:2007 and complete the following sentence.\nFunctional earthing conductors provided solely to ensure ________ of the electrical equipment or to permit reliable and proper ________ of electrical installations, ________ with requirements for main and protective earthing conductors.",type:"free",answer:"correct / operation / need not comply",ref:"5.5.4",tags:["AS3000"]},
+  {id:58,text:"According to AS/NZS 3000, what does IEC 60364 describe the MEN system as?",type:"mc",options:["TT","TN-C","TN-C-S","TN-S"],answer:2,ref:"5.7.2",tags:["AS3000"]},
+  {id:59,text:"A bathroom in a domestic electrical installation has been wired. State the minimum degree of protection for a luminaire installed in Zone 0 of the bathroom.",type:"mc",options:["IPX7","IP68","IPX4","IPX8"],answer:0,ref:"6.2.4.1(a)",tags:["AS3000"]},
+  {id:60,text:"A sauna in a domestic electrical installation has been wired. State the minimum degree of protection for electrical equipment installed within the sauna room.",type:"mc",options:["IPX4B or IP24","IPX5","IPX7","IP44A or IPX5"],answer:0,ref:"6.5.4.1",tags:["AS3000"]},
+  {id:61,text:"Refer to AS/NZS 3000 Section 6 — complete the sentence about Zone one of a shower.\nA barrier of a height at which the shower connection is made to the fixed plumbing, or ________, whichever is greater, may be used to reduce the 1.2m dimension in item ________.",type:"free",answer:"1.8m / (c)(ii)",ref:"6.2.3.1(c)",tags:["AS3000"]},
+  {id:62,text:"Refer to AS/NZS 3000 section 4 and select the maximum temperature limit for accessible metallic surface HAND-HELD means of operation (ambient 30°C):",type:"mc",options:["70°C","65°C","55°C","80°C"],answer:2,ref:"Table 4.1",tags:["AS3000"]},
+  {id:63,text:"Refer to AS/NZS 3000 section 4 and select which TWO standards that SOCKET-OUTLETS shall comply with:",type:"mc",options:["AS/NZS 3112","AS/NZS 3010","AS/NZS 3004.1","AS/NZS 3003","IEC 60309"],answer:[0,4],ref:"4.4.1.4 (c)(b)",tags:["AS3000"]},
+  {id:64,text:"Refer to AS/NZS 3000:2007 and state the minimum distance of a 200W lamp from flammable materials.",type:"mc",options:["600mm","200mm","100mm","1000mm"],answer:3,ref:"Table 4.2",tags:["AS3000"]},
+  {id:65,text:"AS/NZS 3000 allows SELV systems to provide both BASIC and FAULT protection. Select ONE answer that provides both basic and fault protection that meets the required conditions:",type:"mc",options:["The source supplying an SELV shall be a safety isolating transformer complying with AS/NZS 61558.","Live parts PELV circuits shall be protected from direct contact by barriers or insulation, unless voltage does not exceed 25V a.c. or 60V ripple free d.c. in dry areas.","SELV circuits shall not be connected to earth.","Live parts of SELV shall not be connected to earth or to protective earth conductors that are part of other circuits or to other live parts."],answer:3,ref:"1.1.5.7 (c)",tags:["AS3000"]},
+  {id:66,text:"Refer to AS/NZS 3000 Section 1 and select from the following list of standards, where RCDs are required to be installed for additional protection. (Select TWO)",type:"mc",options:["AS/NZS 4249","AS/NZS 2053","AS/NZS 3008.1.2","AS/NZS 3019","AS/NZS 3112","AS/NZS 3012"],answer:[0,5],ref:"Section 1.3.5.6.3 (m)",tags:["AS3000"]},
+  {id:67,text:"Refer to Electricity (Safety) Regulations 2010. Identify TWO types of electrical work that are Prescribed Electrical Work. (Select TWO)",type:"mc",options:["permanently removing, dismantling works or installation permanently disconnected from a power supply","operating works, installations, or appliances, including the loading, removal, or replacement of fuse links","rewinding coils and armatures","the maintenance of conductors","the installation, connection, or maintenance of conductors used in works or installations"],answer:[3,4],ref:"Schedule 1",tags:["ESR"]},
+  {id:68,text:"According to the Electricity (Safety) Regulations 2010 when an installation has been isolated for more than 6 months you need to give or sight a certificate from which standard before the supply is restored?",type:"mc",options:["AS/NZS 3004","AS/NZS 3013","AS/NZS 3019","AS/NZS 3017"],answer:2,ref:"Regulation 74 (2)",tags:["ESR"]},
+  {id:69,text:"If you were to install a Photovoltaic array system which standard would you refer to for the installation?",type:"mc",options:["AS/NZS 5033","NZS 5033","AS/NZS 3010","AS/NZS 4777.1"],answer:0,ref:"Schedule 2",tags:["AS3000"]},
+  {id:70,text:"In a main switchboard with safety services installed what is the maximum number of main switches that can be installed according to AS/NZS 3000?",type:"mc",options:["1","No Limit","2","One per safety service"],answer:1,ref:"AS3000",tags:["AS3000"]},
+  {id:71,text:"According to AS/NZS 3000 what additional standard shall engine-driven generator sets comply with?",type:"mc",options:["NZS 3010","AS 3011","AS/NZS 3010","AS 4777"],answer:2,ref:"AS3000",tags:["AS3000"]},
+  {id:72,text:"Refer to AS/NZS 3000 and complete the following sentences.\nThe responsibility for classification of a hazardous area rests with the ________ contained in AS/NZS ________. The requirements are for ________ for gas and vapour and AS/NZS 7.7.2.1 for ________.",type:"free",answer:"person or parties in control / 60079.10.1 / combustible dust",ref:"AS3000 7.7.2.1",tags:["AS3000"]}
+];
+
+// ============================================================
+// STORAGE
+// ============================================================
+async function sGet(key,shared=false){try{return await window.storage.get(key,shared);}catch(e){return null;}}
+async function sSet(key,val,shared=false){try{return await window.storage.set(key,val,shared);}catch(e){return null;}}
+async function sList(prefix,shared=false){try{return await window.storage.list(prefix,shared);}catch(e){return {keys:[]};}
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser=null, authMode='login', quizMode='full';
+let questions=[], userAnswers=[], current=0, answered=false, sessionStart=null;
+let weakIds=[];
+
+// ============================================================
+// AUTH
+// ============================================================
+function switchTab(tab){
+  authMode=tab;
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('authBtn').textContent=tab==='login'?'Log In':'Create Account';
+  document.getElementById('authError').style.display='none';
+}
+
+async function handleAuth(){
+  const u=document.getElementById('authUsername').value.trim().toLowerCase().replace(/\s/g,'');
+  const p=document.getElementById('authPassword').value;
+  const err=document.getElementById('authError');
+  err.style.display='none';
+  if(!u||!p){showAuthErr('Please fill in both fields.');return;}
+  if(u.length<3){showAuthErr('Username must be at least 3 characters.');return;}
+  if(p.length<4){showAuthErr('Password must be at least 4 characters.');return;}
+  const btn=document.getElementById('authBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="mini-spinner"></span>Loading…';
+  const key='usr:'+u;
+  const ex=await sGet(key,true);
+  if(authMode==='register'){
+    if(ex){btn.disabled=false;btn.textContent='Create Account';showAuthErr('Username taken. Try logging in.');return;}
+    await sSet(key,JSON.stringify({u,h:hash(p),c:Date.now()}),true);
+    await doLogin(u);
+  } else {
+    if(!ex){btn.disabled=false;btn.textContent='Log In';showAuthErr('No account found. Register first.');return;}
+    const d=JSON.parse(ex.value);
+    if(d.h!==hash(p)){btn.disabled=false;btn.textContent='Log In';showAuthErr('Incorrect password.');return;}
+    await doLogin(u);
+  }
+}
+
+function showAuthErr(msg){const e=document.getElementById('authError');e.textContent=msg;e.style.display='block';}
+
+function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)+s.charCodeAt(i);return(h>>>0).toString(36);}
+
+async function doLogin(u){
+  currentUser=u;
+  document.getElementById('userPillName').textContent=u;
+  document.getElementById('userPill').style.display='block';
+  document.getElementById('logoutBtn').style.display='block';
+  const r=await sGet('weak:'+u);
+  weakIds=r?JSON.parse(r.value):[];
+  await loadDashboard();
+  showScreen('dashScreen');
+}
+
+function logout(){
+  currentUser=null;
+  document.getElementById('userPill').style.display='none';
+  document.getElementById('logoutBtn').style.display='none';
+  document.getElementById('authUsername').value='';
+  document.getElementById('authPassword').value='';
+  document.getElementById('authError').style.display='none';
+  document.getElementById('authBtn').disabled=false;
+  document.getElementById('authBtn').textContent='Log In';
+  switchTab('login');
+  showScreen('authScreen');
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function loadDashboard(){
+  document.getElementById('dashName').textContent=currentUser;
+  const r=await sList('sess:'+currentUser+':');
+  const keys=r?r.keys:[];
+  document.getElementById('dsWeakCount').textContent=weakIds.length;
+  if(!keys.length){
+    document.getElementById('dsTotalSessions').textContent='0';
+    document.getElementById('dsBestScore').textContent='—';
+    document.getElementById('dsAvgScore').textContent='—';
+    renderStdGrid([]);
+    document.getElementById('historyList').innerHTML='<div class="empty-state">No sessions yet.<br>Complete your first exam to see stats here.</div>';
+    return;
+  }
+  const sessions=[];
+  for(const k of keys){const r2=await sGet(k);if(r2)sessions.push(JSON.parse(r2.value));}
+  sessions.sort((a,b)=>b.date-a.date);
+  const scores=sessions.map(s=>s.pct);
+  document.getElementById('dsTotalSessions').textContent=sessions.length;
+  document.getElementById('dsBestScore').textContent=Math.max(...scores)+'%';
+  document.getElementById('dsAvgScore').textContent=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)+'%';
+  renderStdGrid(sessions);
+  renderHistory(sessions);
+}
+
+function renderStdGrid(sessions){
+  const stds=['ESR','AS3000','AS3008','ECP'];
+  const cols={ESR:'#4da6ff',AS3000:'#ffd166',AS3008:'#c084fc',ECP:'#fb923c'};
+  const totals={};
+  stds.forEach(s=>totals[s]={c:0,t:0});
+  sessions.forEach(s=>{if(s.bs)stds.forEach(st=>{if(s.bs[st]){totals[st].c+=s.bs[st].c;totals[st].t+=s.bs[st].t;}});});
+  document.getElementById('standardsGrid').innerHTML=stds.map(s=>{
+    const pct=totals[s].t?Math.round(totals[s].c/totals[s].t*100):null;
+    return`<div class="std-card"><div class="std-header"><div class="std-name">${s}</div><div class="std-pct" style="color:${cols[s]}">${pct!==null?pct+'%':'—'}</div></div><div class="std-bar"><div class="std-bar-fill" style="width:${pct||0}%;background:${cols[s]}"></div></div><div class="std-detail">${totals[s].t?totals[s].c+'/'+totals[s].t+' correct':'No data yet'}</div></div>`;
+  }).join('');
+}
+
+function renderHistory(sessions){
+  const cols={ESR:'#4da6ff',AS3000:'#ffd166',AS3008:'#c084fc',ECP:'#fb923c'};
+  document.getElementById('historyList').innerHTML=sessions.slice(0,10).map(s=>{
+    const d=new Date(s.date);
+    const ds=d.toLocaleDateString('en-NZ',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit'});
+    const col=s.pct>=80?'var(--accent)':s.pct>=60?'var(--yellow)':'var(--wrong)';
+    const pills=s.bs?Object.keys(s.bs).map(st=>`<span class="std-pill ${st}">${st} ${s.bs[st].t?Math.round(s.bs[st].c/s.bs[st].t*100):0}%</span>`).join(''):'';
+    return`<div class="history-item"><div class="history-date">${ds}</div><div class="history-mode">${s.mode}</div><div class="history-std-pills">${pills}</div><div class="history-score" style="color:${col}">${s.pct}%</div></div>`;
+  }).join('');
+}
+
+// ============================================================
+// QUIZ
+// ============================================================
+function selectMode(el,m){document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');quizMode=m;}
+
+async function startWeakMode(){
+  const r=await sGet('weak:'+currentUser);
+  weakIds=r?JSON.parse(r.value):[];
+  if(!weakIds.length){alert('No weak spots saved yet. Complete a full exam first!');return;}
+  quizMode='weak';
+  startQuiz();
+}
+
+function startQuiz(){
+  let pool=[...ALL_QUESTIONS];
+  if(quizMode==='shuffle')pool.sort(()=>Math.random()-0.5);
+  else if(quizMode==='weak'){pool=pool.filter(q=>weakIds.includes(q.id));if(!pool.length){alert('No weak spots!');return;}pool.sort(()=>Math.random()-0.5);}
+  else if(quizMode==='quick'){pool.sort(()=>Math.random()-0.5);pool=pool.slice(0,20);}
+  questions=pool;userAnswers=new Array(questions.length).fill(null);current=0;sessionStart=Date.now();
+  showScreen('quizScreen');
+  document.getElementById('headerProgress').style.display='flex';
+  renderQ();
+}
+
+function renderQ(){
+  const q=questions[current],total=questions.length;
+  document.getElementById('progressFill').style.width=(current/total*100)+'%';
+  document.getElementById('progressLabel').textContent=(current+1)+' / '+total;
+  document.getElementById('qCounter').textContent='Q '+(current+1)+' of '+total;
+  document.getElementById('qNum').textContent='Question '+String(q.id).padStart(2,'0');
+  document.getElementById('qText').textContent=q.text;
+  document.getElementById('qTags').innerHTML=q.tags.map(t=>`<span class="q-tag ${t}">${t}</span>`).join('');
+  document.getElementById('feedbackBox').className='feedback';
+  document.getElementById('answerReveal').classList.remove('show');
+  document.getElementById('freeAnswerArea').style.display='none';
+  document.getElementById('revealBtn').style.display='none';
+  document.getElementById('optionsContainer').innerHTML='';
+  if(q.type==='mc'){
+    const L=['A','B','C','D','E','F'];
+    q.options.forEach((o,i)=>{
+      const d=document.createElement('div');
+      d.className='option';
+      d.innerHTML=`<span class="option-letter">${L[i]}</span><span>${o}</span>`;
+      d.onclick=()=>selectOption(i,d);
+      document.getElementById('optionsContainer').appendChild(d);
+    });
+  } else {
+    document.getElementById('freeAnswerArea').style.display='block';
+    document.getElementById('freeAnswerInput').value='';
+    document.getElementById('revealBtn').style.display='block';
+    document.getElementById('freeAnswerInput').oninput=()=>{userAnswers[current]=document.getElementById('freeAnswerInput').value;};
+  }
+  answered=false;
+  document.getElementById('nextBtn').disabled=(q.type==='mc');
+  document.getElementById('nextBtn').textContent=current===questions.length-1?'Finish ✓':'Next →';
+  document.getElementById('prevBtn').style.display=current>0?'flex':'none';
+  const prev=userAnswers[current];
+  if(prev!==null&&q.type!=='free'){
+    const opts=document.querySelectorAll('.option');
+    if(Array.isArray(prev)){
+      prev.forEach(idx=>opts[idx]&&opts[idx].classList.add(q.answer.includes(idx)?'selected-correct':'selected-wrong'));
+      (Array.isArray(q.answer)?q.answer:[q.answer]).forEach(idx=>opts[idx]&&opts[idx].classList.add('show-correct'));
+    } else {
+      const c=Array.isArray(q.answer)?q.answer[0]:q.answer;
+      opts[prev]&&opts[prev].classList.add(prev===c?'selected-correct':'selected-wrong');
+      if(prev!==c)opts[c]&&opts[c].classList.add('show-correct');
+    }
+    opts.forEach(o=>{o.classList.add('disabled');o.onclick=null;});
+    showFeedback(prev,q);answered=true;
+    document.getElementById('nextBtn').disabled=false;
+  }
+}
+
+function selectOption(idx,el){
+  if(answered)return;
+  const q=questions[current];
+  const opts=document.querySelectorAll('.option');
+  if(Array.isArray(q.answer)){
+    el.dataset.selected=el.dataset.selected==='1'?'0':'1';
+    opts.forEach(o=>o.classList.remove('selected-correct'));
+    opts.forEach(o=>{if(o.dataset.selected==='1')o.classList.add('selected-correct');});
+    const sel=[...opts].map((o,i)=>o.dataset.selected==='1'?i:-1).filter(i=>i>=0);
+    if(sel.length===q.answer.length)commitMulti(sel,q,opts);
+  } else {commitSingle(idx,q,opts);}
+}
+
+function commitSingle(idx,q,opts){
+  answered=true;userAnswers[current]=idx;
+  const c=q.answer;
+  opts.forEach((o,i)=>{o.classList.add('disabled');o.onclick=null;if(i===idx)o.classList.add(idx===c?'selected-correct':'selected-wrong');if(i===c&&idx!==c)o.classList.add('show-correct');});
+  showFeedback(idx,q);document.getElementById('nextBtn').disabled=false;
+  saveWeak(idx===c,q.id);
+}
+
+function commitMulti(sel,q,opts){
+  answered=true;userAnswers[current]=sel;
+  opts.forEach((o,i)=>{o.dataset.selected='0';o.classList.remove('selected-correct');o.classList.add('disabled');o.onclick=null;if(sel.includes(i))o.classList.add(q.answer.includes(i)?'selected-correct':'selected-wrong');if(q.answer.includes(i)&&!sel.includes(i))o.classList.add('show-correct');});
+  const ok=JSON.stringify([...sel].sort())===JSON.stringify([...q.answer].sort());
+  showFeedback(ok?q.answer[0]:-1,q,true,ok);document.getElementById('nextBtn').disabled=false;
+  saveWeak(ok,q.id);
+}
+
+function showFeedback(idx,q,isMulti=false,multiOk=false){
+  const fb=document.getElementById('feedbackBox');
+  const ok=isMulti?multiOk:(Array.isArray(q.answer)?q.answer.includes(idx):idx===q.answer);
+  fb.className='feedback '+(ok?'correct':'wrong');
+  document.getElementById('feedbackTitle').textContent=ok?'✓ Correct!':'✗ Incorrect';
+  document.getElementById('feedbackBody').textContent=ok?'Well done.':`Correct: ${Array.isArray(q.answer)?q.answer.map(a=>q.options[a]).join(' AND '):q.options[q.answer]}`;
+  document.getElementById('feedbackRef').textContent=q.ref?'Ref: '+q.ref:'';
+}
+
+function revealFreeAnswer(){
+  const q=questions[current];
+  document.getElementById('answerRevealText').textContent=q.answer;
+  document.getElementById('answerReveal').classList.add('show');
+  userAnswers[current]=document.getElementById('freeAnswerInput').value||'(viewed)';
+  document.getElementById('nextBtn').disabled=false;
+  saveWeak(false,q.id);
+}
+
+function saveWeak(correct,qId){
+  if(!correct)weakIds=[...new Set([...weakIds,qId])];
+  else weakIds=weakIds.filter(id=>id!==qId);
+  sSet('weak:'+currentUser,JSON.stringify(weakIds));
+}
+
+function nextQ(){
+  if(questions[current].type==='free'&&userAnswers[current]===null)userAnswers[current]=document.getElementById('freeAnswerInput').value||'(skipped)';
+  if(current===questions.length-1){showResults();return;}
+  current++;renderQ();
+}
+
+function prevQ(){if(current>0){current--;renderQ();}}
+
+// ============================================================
+// RESULTS
+// ============================================================
+async function showResults(){
+  showScreen('resultsScreen');
+  document.getElementById('headerProgress').style.display='none';
+  document.getElementById('progressLabel').textContent='';
+  document.getElementById('savingIndicator').textContent='Saving results…';
+
+  let correct=0,wrong=0,skipped=0;
+  const wrongItems=[];
+  const bs={};
+
+  questions.forEach((q,i)=>{
+    const ua=userAnswers[i];
+    q.tags.forEach(t=>{if(!bs[t])bs[t]={c:0,t:0};bs[t].t++;});
+    if(q.type==='free'){
+      if(!ua||ua==='(skipped)'){skipped++;}
+      else{correct++;q.tags.forEach(t=>{if(bs[t])bs[t].c++;});}
+      return;
+    }
+    if(ua===null||ua===undefined){skipped++;return;}
+    const ok=Array.isArray(q.answer)?(Array.isArray(ua)&&JSON.stringify([...ua].sort())===JSON.stringify([...q.answer].sort())):ua===q.answer;
+    if(ok){correct++;q.tags.forEach(t=>{if(bs[t])bs[t].c++;});}
+    else{wrong++;wrongItems.push({q,ua});}
+  });
+
+  const total=questions.length;
+  const pct=Math.round((correct/total)*100);
+  document.getElementById('scorePct').textContent=pct+'%';
+  document.getElementById('correctCount').textContent=correct;
+  document.getElementById('wrongCount').textContent=wrong;
+  document.getElementById('skippedCount').textContent=skipped;
+
+  const circ=326.7;
+  setTimeout(()=>{document.getElementById('scoreCircle').style.strokeDashoffset=circ-(circ*pct/100);},100);
+
+  const cols={ESR:'#4da6ff',AS3000:'#ffd166',AS3008:'#c084fc',ECP:'#fb923c'};
+  document.getElementById('resultsStdGrid').innerHTML=Object.keys(bs).map(s=>{
+    const p=bs[s].t?Math.round(bs[s].c/bs[s].t*100):0;
+    return`<div class="results-std-card"><div class="results-std-name">${s}</div><div class="results-std-score" style="color:${cols[s]||'var(--accent)'}">${p}%</div><div class="results-std-detail">${bs[s].c}/${bs[s].t} correct</div></div>`;
+  }).join('');
+
+  let grade,msg;
+  if(pct>=80){grade='🎉 Pass';msg='Strong result. Tracking well for July 14th.';}
+  else if(pct>=65){grade='📚 Almost There';msg='Getting close — drill the weak spots.';}
+  else{grade='💪 Keep Grinding';msg='Plenty to work on. Use Weak Spots mode to drill the misses.';}
+  document.getElementById('resultsGrade').textContent=grade;
+  document.getElementById('resultsMsg').textContent=msg;
+
+  const rl=document.getElementById('reviewList');
+  if(wrongItems.length){
+    rl.innerHTML='<div class="section-title" style="margin-top:4px">Incorrect ('+wrongItems.length+')</div>'+wrongItems.map(({q,ua})=>{
+      const ya=Array.isArray(ua)?ua.map(a=>q.options[a]).join(', '):(q.options[ua]||ua||'—');
+      const ca=Array.isArray(q.answer)?q.answer.map(a=>q.options[a]).join(', '):q.options[q.answer];
+      return`<div class="review-item"><div class="review-q">Q${q.id}: ${q.text.substring(0,90)}…</div><div class="review-ans">Yours: ${ya} · Correct: <span>${ca}</span></div></div>`;
+    }).join('');
+  } else {
+    rl.innerHTML='<div style="color:var(--accent);text-align:center;padding:16px;font-size:14px">✓ No wrong answers!</div>';
+  }
+  document.getElementById('reviewBtn').style.display=wrongItems.length?'flex':'none';
+
+  if(currentUser){
+    const data={date:Date.now(),mode:quizMode,pct,correct,wrong,skipped,total,bs};
+    await sSet('sess:'+currentUser+':'+Date.now(),JSON.stringify(data));
+    document.getElementById('savingIndicator').textContent='✓ Results saved';
+    setTimeout(()=>{document.getElementById('savingIndicator').textContent='';},2000);
+  }
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+</script>
+</body>
+</html>
